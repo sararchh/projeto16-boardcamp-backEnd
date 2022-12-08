@@ -1,4 +1,4 @@
-import expresss, { Router } from 'express';
+import { Router } from 'express';
 
 import categoriesController from '../controllers/categoriesController.js';
 import validateCategory from '../middlewares/validateCategory.js';

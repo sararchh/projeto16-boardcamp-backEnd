@@ -15,7 +15,7 @@ export const validateCategory = async (req, res, next) => {
   const result = await db.query("SELECT * FROM categories where name =$1", [nameCategory]);
 
   if(result.rows.length > 0){
-    return res.status(422).send({ message: 'Existe uma categoria com o mesmo nome!' });
+    return res.status(409).send({ message: 'Existe uma categoria com o mesmo nome!' });
   }
 
   if (errorsSchema) {
