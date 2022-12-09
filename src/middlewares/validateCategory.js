@@ -6,7 +6,6 @@ const db = await connectDB();
 export const validateCategory = async (req, res, next) => {
   let errorsSchema;
 
-
   await categorySchema.validate(req.body, { abortEarly: false }).catch((errors) => {
     errorsSchema = errors;
   });
