@@ -41,5 +41,18 @@ export default {
     } catch (error) {
       return res.sendStatus(404);
     }
+  },
+
+  updatedOne: async (req, res) => {
+    try {
+      const { name, phone, cpf, birthday } = req.body;
+      const { id } = req.params;
+
+      await db.query(`UPDATE customers SET name= $1, phone= $2, cpf= $3, birthday= $4 WHERE id=$5`, [name, phone, cpf, birthday, id]);
+
+      return res.sendStatus(200);
+    } catch (error) {
+      return res.sendStatus(400);
+    }
   }
 };
