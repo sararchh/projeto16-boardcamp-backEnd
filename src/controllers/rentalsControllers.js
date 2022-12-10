@@ -6,6 +6,38 @@ const db = await connectDB();
 export default {
   findAll: async (req, res) => {
     try {
+      const { customerId, gameId } = req.query;
+
+      if (customerId) {
+        const findAllRentalsByCustomer = await db.query(`SELECT rentals.*, 
+        json_build_object('id',customers.id, 'name', customers.name) AS customer, 
+        json_build_object('id', games.id, 'name', games.name, 'categoryId', games."categoryId", 'categoryName', games.name) AS game
+          FROM rentals 
+            JOIN customers
+          ON rentals."customerId" = customers.id
+            JOIN games
+          ON rentals."gameId" = games.id
+          WHERE rentals."customerId" = $1
+        `,[customerId]);
+        
+      return res.status(200).send(findAllRentalsByCustomer.rows);
+      }
+
+      if (gameId) {
+        const findAllRentalsById = await db.query(`SELECT rentals.*, 
+        json_build_object('id',customers.id, 'name', customers.name) AS customer, 
+        json_build_object('id', games.id, 'name', games.name, 'categoryId', games."categoryId", 'categoryName', games.name) AS game
+          FROM rentals 
+            JOIN customers
+          ON rentals."customerId" = customers.id
+            JOIN games
+          ON rentals."gameId" = games.id
+          WHERE rentals."gameId" = $1
+        `,[gameId]);
+        
+      return res.status(200).send(findAllRentalsById.rows);
+      }
+
       const findAllGames = await db.query(`SELECT rentals.*, 
       json_build_object('id',customers.id, 'name', customers.name) AS customer, 
       json_build_object('id', games.id, 'name', games.name, 'categoryId', games."categoryId", 'categoryName', games.name) AS game
