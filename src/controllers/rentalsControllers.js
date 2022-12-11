@@ -1,6 +1,7 @@
-import { format } from 'date-fns';
+import { format, parseISO, subDays } from 'date-fns';
 
 import connectDB from '../database/database.js';
+import formattedDate from '../utils/formattedDate.js';
 const db = await connectDB();
 
 export default {
@@ -95,15 +96,54 @@ export default {
         return res.sendStatus(400);
       }
 
-     if(rentalsExist.rows[0].returnDate === null) {
-      return res.status(400).send('Aluguel não finalizado');
-     }
+      if (rentalsExist.rows[0].returnDate === null) {
+        return res.status(400).send('Aluguel não finalizado');
+      }
 
-     db.query(`DELETE FROM rentals WHERE  id = $1`, [id]);
+      db.query(`DELETE FROM rentals WHERE  id = $1`, [id]);
 
       return res.sendStatus(200);
     } catch (error) {
       return res.sendStatus(400);
+    }
+  },
+
+  returnRentals: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const returnDate = format(new Date(), 'yyy-MM-dd');
+
+      const rentalsExist = await db.query(`SELECT * FROM rentals WHERE id =$1`, [id]);
+      if (rentalsExist.rows.length === 0) {
+        return res.status(404).send({ message: 'Aluguel não encontrado,verifique' });
+      }
+
+      const rentDate = rentalsExist.rows[0].rentDate;
+      const daysRented = rentalsExist.rows[0].daysRented;
+      const rentDateFormmatted = formattedDate(rentDate);
+
+      const differenceInMilliseconds = new Date(rentDateFormmatted) - new Date(returnDate);
+      const differenceInDays = differenceInMilliseconds / (1000 * 60 * 60 * 24);
+
+      if (rentalsExist.rows[0].returnDate != null ) {
+        return res.status(400).send({ message: 'Aluguel já finalizado!' })
+      }
+
+      if (Math.abs(differenceInDays) > daysRented) {
+        const findGame = await db.query(`SELECT * FROM games WHERE id = $1`, [rentalsExist.rows[0].gameId]);
+        const pricePerDay = findGame.rows[0].pricePerDay;
+
+        const delayFee = pricePerDay * Math.abs(differenceInDays);
+
+        await db.query(`UPDATE rentals SET "returnDate"=$1 , "delayFee"=$2  WHERE id=$3`, [returnDate, delayFee, id]);
+        return res.sendStatus(200);
+      }
+
+      await db.query(`UPDATE rentals SET "returnDate"=$1 , "delayFee"=$2  WHERE id=$3`, [returnDate, 0, id]);
+
+      return res.sendStatus(200);
+    } catch (error) {
+      return res.status(400).send({ message: 'Erro ao finalizar aluguel, verifique!' })
     }
   }
 }

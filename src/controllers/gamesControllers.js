@@ -9,12 +9,12 @@ export default {
 
       if (name) {
         const findOneGame = await db.query(`SELECT * FROM games WHERE lower(name) LIKE lower($1)`, [name + '%']);
-        return res.status(200).send({ data: findOneGame.rows });
+        return res.status(200).send(findOneGame.rows);
       }
 
       const findAllGames = await db.query('SELECT * FROM games');
 
-      return res.status(200).send({ data: findAllGames.rows });
+      return res.status(200).send(findAllGames.rows);
     } catch (error) {
       return res.sendStatus(404);
     }
